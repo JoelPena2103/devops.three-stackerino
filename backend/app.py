@@ -69,6 +69,16 @@ def create_message():
 
     return jsonify({"id": new_id, "author": author, "text": text}), 201
 
+#New Endpoint
+@app.get("/api/stats")
+def stats():
+    try:
+        with connect_db() as conn:
+            (total,) = conn.execute("SELECT COUNT(*) FROM messages").fetchone()
+    except psycopg.Error as err:
+        return db_error(err)
+
+    return jsonify({"total_messages": total})
 
 # Health-check: is the backend alive? And can it talk to the database?
 @app.get("/healthcheck")

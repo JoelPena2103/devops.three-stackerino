@@ -50,13 +50,30 @@ app.get("/", async (req, res) => {
     `))
   }
 
+  // NEW: ask the backend for the stats
+  let total = "?"
+  try {
+    const statsResponse = await fetch(`${backendUrl}/api/stats`)
+    if (statsResponse.ok) {
+      const stats = await statsResponse.json()
+      total = stats.total_messages
+    } else {
+      console.error(`The backend answered ${statsResponse.status} on /api/stats`)
+    }
+  } catch (err) {
+    console.error(`Could not reach ${backendUrl}/api/stats:`, err.message)
+  }
+  
+  
+
   const list = data.messages
     .map((m) => `<li><b>${escape(m.author)}</b>: ${escape(m.text)} <small>(${m.created_at})</small></li>`)
     .join("")
 
   res.send(page(`
     <h1>🖥️ Three-Stackerino Message Board</h1>
-    <p>Frontend ✅ → Backend ✅ → Database ✅</p>
+	<p>Frontend ✅ → Backend ✅ → Database ✅</p>
+	<p>Total messages: <b>${escape(total)}</b></p>
     <form method="POST" action="/messages" style="background: #eef; padding: 16px; border-radius: 8px;">
       <input name="author" placeholder="Your name" maxlength="50" required>
       <input name="text" placeholder="Write a message" maxlength="280" required size="35">
@@ -82,6 +99,8 @@ app.post("/messages", async (req, res) => {
   }
   res.redirect("/")
 })
+
+
 
 app.get("/healthcheck", (req, res) => {
   res.status(200).send("The frontend works!")
